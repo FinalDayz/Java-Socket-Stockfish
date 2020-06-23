@@ -63,6 +63,9 @@ public class StockfishClient {
                 case Checkers:
                     output = engine.getCheckers(query);
                     break;
+                case ANALYSE:
+                    output = engine.analyse(query);
+                    break;
                 default:
                     output = null;
                     break;

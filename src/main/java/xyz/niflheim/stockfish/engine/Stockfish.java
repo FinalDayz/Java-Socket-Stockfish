@@ -20,6 +20,7 @@ import xyz.niflheim.stockfish.engine.enums.Variant;
 import xyz.niflheim.stockfish.exceptions.StockfishInitException;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 public class Stockfish extends UCIEngine {
@@ -64,6 +65,55 @@ public class Stockfish extends UCIEngine {
         sendCommand(command.toString());
 
         return readLine("bestmove").substring(9).split("\\s+")[0];
+    }
+
+
+    public String analyse(Query query) {
+        if (query.getDifficulty() >= 0) {
+            waitForReady();
+            sendCommand("setoption name Skill Level value " + query.getDifficulty());
+        }
+
+        waitForReady();
+        sendCommand("position fen " + query.getFen());
+
+        StringBuilder command = new StringBuilder("go ");
+
+        if (query.getDepth() >= 0)
+            command.append("depth ").append(query.getDepth()).append(" ");
+
+        if (query.getMovetime() >= 0)
+            command.append("movetime ").append(query.getMovetime());
+
+        waitForReady();
+        sendCommand(command.toString());
+
+        List<String> ResponseLines = readResponse("bestmove");
+
+        String lastInfo =  ResponseLines.get(ResponseLines.size() - 2);
+        String result =  ResponseLines.get(ResponseLines.size() - 1);
+        int index = lastInfo.lastIndexOf("cp");
+        if(index == -1) {
+            System.err.println("COULDNT FIND CP IN RESPONSE, RESPONSE: " +
+                    ResponseLines.get(ResponseLines.size() - 2));
+            return "";
+        }
+
+        String cp = lastInfo.substring(index + 3);
+        cp = cp.substring(0, cp.indexOf(" "));
+
+        String bestMove = result.substring(9).split("\\s+")[0];
+
+        StringBuilder response = new StringBuilder();
+        response.append("move ");
+        response.append(bestMove);
+
+        response.append(" ");
+
+        response.append("cp ");
+        response.append(cp);
+
+        return response.toString();
     }
 
     public String getLegalMoves(Query query) {
