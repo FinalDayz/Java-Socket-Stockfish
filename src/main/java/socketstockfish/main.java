@@ -27,6 +27,7 @@ public class main {
         Spark.before((request, response) -> response.header("Access-Control-Allow-Origin", "*"));
 
 
+        Spark.get("/analyse/:fen/:difficulty", new AnalyseRequest());
         Spark.get("/analyse/:fen", new AnalyseRequest());
 
     }

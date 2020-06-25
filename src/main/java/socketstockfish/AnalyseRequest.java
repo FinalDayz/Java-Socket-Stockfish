@@ -26,6 +26,7 @@ public class AnalyseRequest implements Route, Consumer<String> {
     public Object handle(Request request, Response response) throws Exception {
         response.type("application/json");
         String fen = request.params("fen");
+        int difficulty = request.params("difficulty")== null ? -1 : Integer.parseInt(request.params("difficulty"));
 
         if (fen == null || fen.isEmpty()) {
             System.err.println("ERROR EMPTY_FEN, fen: " + fen);
@@ -43,12 +44,17 @@ public class AnalyseRequest implements Route, Consumer<String> {
                     .setInstances(4)
                     .setVariant(Variant.BMI2)
                     .build();
-            Query query = new Query.Builder(QueryType.ANALYSE)
+            Query.Builder builder = new Query.Builder(QueryType.ANALYSE)
                     .setFen(fen)
+//                    .setDifficulty()
 //                    .setFen("rnbqkbnr/pppppppp/8/3P4/8/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1")
-                    .setDepth(15)
-                    .build();
+                    .setDepth(15);
+                // rnbqkbnr%2Fpppppppp%2F8%2F3P4%2F8%2F8%2FPPPP1PPP%2FRNBQKBNR%20b%20KQkq%20e3%200%201
+            if(difficulty != -1) {
+                builder.setDifficulty(difficulty);
+            }
 
+            Query query = builder.build();
 
             startEngineRequest();
             client.submit(query, this);
