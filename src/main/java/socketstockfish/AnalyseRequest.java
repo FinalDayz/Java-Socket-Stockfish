@@ -1,8 +1,11 @@
 package socketstockfish;
 
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import spark.Request;
 import spark.Response;
 import spark.Route;
+import com.google.gson.Gson;
 import xyz.niflheim.stockfish.StockfishClient;
 import xyz.niflheim.stockfish.engine.enums.Query;
 import xyz.niflheim.stockfish.engine.enums.QueryType;
@@ -20,14 +23,19 @@ public class AnalyseRequest implements Route, Consumer<String> {
 
     @Override
     public Object handle(Request request, Response response) throws Exception {
+        response.type("application/json");
         String fen = request.params("fen");
 
         if (fen == null || fen.isEmpty()) {
-            System.err.println("ERROR NOT_VALID_FEN, fen: " + fen);
-            return "ERROR NOT_VALID_FEN";
+            System.err.println("ERROR EMPTY_FEN, fen: " + fen);
+            return this.buildError("EMPTY_FEN");
         }
 
-        System.out.println(fen);
+
+        if(!fen.matches("\\s*([rnbqkpRNBQKP1-8]+\\/){7}([rnbqkpRNBQKP1-8]+)\\s[bw-]\\s(([a-hkqA-HKQ]{1,4})|(-))\\s(([a-h][36])|(-))\\s\\d+\\s\\d+\\s*")) {
+            System.err.println("ERROR NOT_VALID_FEN, fen: " + fen);
+            return this.buildError("NOT_VALID_FEN");
+        }
 
         try {
             StockfishClient client = new StockfishClient.Builder()
@@ -50,16 +58,36 @@ public class AnalyseRequest implements Route, Consumer<String> {
 
             if(this.hasTimeout()) {
                 System.err.println("ERROR TIMEOUT_ENGINE, maybe invalid fen: " + fen);
-                return "ERROR TIMEOUT_ENGINE";
+                return this.buildError("TIMEOUT_ENGINE");
             }
-            System.out.println("OK: " + this.engineResponse);
-            return this.engineResponse;
+            String jsonResponse = this.parseEngineResponse(this.engineResponse);
+
+            System.out.println("OK: " + jsonResponse);
+            return jsonResponse;
 
         } catch (StockfishInitException e) {
             System.err.println("UNKNOWN_ERROR: ");
             e.printStackTrace();
-            return "ERROR UNKNOWN_ERROR";
+            return this.buildError("UNKNOWN_ERROR");
         }
+    }
+
+    private String buildError(String code) {
+        JsonObject response = new JsonObject();
+        response.addProperty("error", code);
+
+        return response.toString();
+    }
+
+    private String parseEngineResponse(String engineResponse) {
+        String[] splitted = engineResponse.split(" ");
+        JsonObject response = new JsonObject();
+
+        for(int i = 0; i < splitted.length; i+= 2) {
+            response.addProperty(splitted[i], splitted[i+1]);
+        }
+
+        return response.toString();
     }
 
     private void setEngineResult(String result) {
