@@ -92,15 +92,6 @@ public class Stockfish extends UCIEngine {
 
         String lastInfo =  ResponseLines.get(ResponseLines.size() - 2);
         String result =  ResponseLines.get(ResponseLines.size() - 1);
-        int index = lastInfo.lastIndexOf("cp");
-        if(index == -1) {
-            System.err.println("COULDNT FIND CP IN RESPONSE, RESPONSE: " +
-                    ResponseLines.get(ResponseLines.size() - 2));
-            return "";
-        }
-
-        String cp = lastInfo.substring(index + 3);
-        cp = cp.substring(0, cp.indexOf(" "));
 
         String bestMove = result.substring(9).split("\\s+")[0];
 
@@ -110,10 +101,31 @@ public class Stockfish extends UCIEngine {
 
         response.append(" ");
 
-        response.append("cp ");
-        response.append(cp);
+        System.out.println(lastInfo);
+        String[] infoArray = lastInfo.split(" ");
+        int index;
+
+        if((index = findArrayIndex(infoArray, "cp")) != -1) {
+            response.append("cp ");
+            response.append(infoArray[index+1]);
+        } else if((index = findArrayIndex(infoArray, "mate")) != -1) {
+            response.append("mate ");
+            response.append(infoArray[index+1]);
+        } else {
+            System.err.println("COULDNT FIND CP OR MATE IN RESPONSE, RESPONSE: " + lastInfo);
+            return "";
+        }
 
         return response.toString();
+    }
+
+    private int findArrayIndex(String[] array, String toFind) {
+        for(int i = 0; i < array.length; i++) {
+            if(array[i].equals(toFind)) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     public String getLegalMoves(Query query) {

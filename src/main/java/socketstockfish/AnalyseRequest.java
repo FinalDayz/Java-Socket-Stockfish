@@ -6,6 +6,7 @@ import spark.Request;
 import spark.Response;
 import spark.Route;
 import com.google.gson.Gson;
+import spark.utils.StringUtils;
 import xyz.niflheim.stockfish.StockfishClient;
 import xyz.niflheim.stockfish.engine.enums.Query;
 import xyz.niflheim.stockfish.engine.enums.QueryType;
@@ -83,8 +84,13 @@ public class AnalyseRequest implements Route, Consumer<String> {
         String[] splitted = engineResponse.split(" ");
         JsonObject response = new JsonObject();
 
-        for(int i = 0; i < splitted.length; i+= 2) {
-            response.addProperty(splitted[i], splitted[i+1]);
+        for(int i = 0; i < Math.floor(splitted.length/2.0)*2; i+= 2) {
+            try{
+                response.addProperty(splitted[i], Integer.parseInt(splitted[i+1]));
+            } catch(Exception e) {
+                response.addProperty(splitted[i], splitted[i+1]);
+            }
+
         }
 
         return response.toString();
