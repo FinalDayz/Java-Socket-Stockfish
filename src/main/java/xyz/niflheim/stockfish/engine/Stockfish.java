@@ -96,7 +96,7 @@ public class Stockfish extends UCIEngine {
         String bestMove = result.substring(9).split("\\s+")[0];
 
         StringBuilder response = new StringBuilder();
-        response.append("move ");
+        response.append("bestMove ");
         response.append(bestMove);
 
         response.append(" ");
