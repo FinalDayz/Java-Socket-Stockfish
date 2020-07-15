@@ -30,5 +30,9 @@ public class main {
         Spark.get("/analyse/:fen/:difficulty", new AnalyseRequest());
         Spark.get("/analyse/:fen", new AnalyseRequest());
 
+        Spark.get("/puzzle", new Puzzle());
+
+        Puzzle.getPuzzle();
+
     }
 }

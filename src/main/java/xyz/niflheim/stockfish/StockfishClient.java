@@ -76,6 +76,14 @@ public class StockfishClient {
         });
     }
 
+    public void exit() {
+        Stockfish engine =  this.engines.remove();
+        while(engine != null) {
+            engine.exit();
+            engine = this.engines.remove();
+        }
+    }
+
     public static class Builder {
         private Set<Option> options = new HashSet<>();
         private Variant variant = Variant.DEFAULT;

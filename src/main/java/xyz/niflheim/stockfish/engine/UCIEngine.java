@@ -41,6 +41,10 @@ abstract class UCIEngine {
         }
     }
 
+    public void exit() {
+        this.process.destroy();
+    };
+
     void waitForReady() {
         sendCommand("isready");
         readResponse("readyok");

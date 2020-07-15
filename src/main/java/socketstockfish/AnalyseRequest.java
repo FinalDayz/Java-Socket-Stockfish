@@ -1,12 +1,9 @@
 package socketstockfish;
 
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import spark.Request;
 import spark.Response;
 import spark.Route;
-import com.google.gson.Gson;
-import spark.utils.StringUtils;
 import xyz.niflheim.stockfish.StockfishClient;
 import xyz.niflheim.stockfish.engine.enums.Query;
 import xyz.niflheim.stockfish.engine.enums.QueryType;
@@ -40,14 +37,14 @@ public class AnalyseRequest implements Route, Consumer<String> {
         }
 
         try {
-            StockfishClient client = new StockfishClient.Builder()
-                    .setInstances(4)
-                    .setVariant(Variant.BMI2)
-                    .build();
+            SimpleEngine engine = new SimpleEngine();
+
+//            StockfishClient client = new StockfishClient.Builder()
+//                    .setInstances(1)
+//                    .setVariant(Variant.BMI2)
+//                    .build();
             Query.Builder builder = new Query.Builder(QueryType.ANALYSE)
                     .setFen(fen)
-//                    .setDifficulty()
-//                    .setFen("rnbqkbnr/pppppppp/8/3P4/8/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1")
                     .setDepth(15);
                 // rnbqkbnr%2Fpppppppp%2F8%2F3P4%2F8%2F8%2FPPPP1PPP%2FRNBQKBNR%20b%20KQkq%20e3%200%201
             if(difficulty != -1) {
@@ -55,19 +52,22 @@ public class AnalyseRequest implements Route, Consumer<String> {
             }
 
             Query query = builder.build();
+            this.startEngineRequest();
+            engine.requestEngine(query);
 
-            startEngineRequest();
-            client.submit(query, this);
-
-            while(waitForEngine && !this.hasTimeout()) {
-                Thread.sleep(1);
+            String result = null;
+            while (result == null && !this.hasTimeout()) {
+                result = engine.getRawResponse();
+                Thread.sleep(0, 10000);
             }
 
-            if(this.hasTimeout()) {
+
+            if(this.hasTimeout() || result == null) {
                 System.err.println("ERROR TIMEOUT_ENGINE, maybe invalid fen: " + fen);
                 return this.buildError("TIMEOUT_ENGINE");
             }
-            String jsonResponse = this.parseEngineResponse(this.engineResponse);
+
+            String jsonResponse = this.parseEngineResponse(result);
 
             System.out.println("OK: " + jsonResponse);
             return jsonResponse;

@@ -101,7 +101,6 @@ public class Stockfish extends UCIEngine {
 
         response.append(" ");
 
-        System.out.println(lastInfo);
         String[] infoArray = lastInfo.split(" ");
         int index;
 
